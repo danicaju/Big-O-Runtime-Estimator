@@ -58,4 +58,9 @@ Es útil como apoyo académico para comprender el crecimiento de funciones de co
 Compilar:
 
 ```bash
-javac AlgoritmiaNotacionBigO.java
+javac BigORuntimeEstimator.java
+
+Compilar version GUI:
+
+```bash
+javac BigORuntimeEstimatorGUI.java
