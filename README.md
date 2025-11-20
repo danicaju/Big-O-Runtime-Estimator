@@ -59,8 +59,3 @@ Compilar:
 
 ```bash
 javac BigORuntimeEstimator.java
-
-Compilar version GUI:
-
-```bash
-javac BigORuntimeEstimatorGUI.java
