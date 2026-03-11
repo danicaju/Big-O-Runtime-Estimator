@@ -50,12 +50,3 @@ Es útil como apoyo académico para comprender el crecimiento de funciones de co
 
 - **Java 17** o superior.
 - Archivo `LT.java` (lector personalizado).
-
----
-
-## ⚙️ Instalación y ejecución
-
-Compilar:
-
-```bash
-javac BigORuntimeEstimator.java
