@@ -89,7 +89,10 @@ public class BigOEngine {
             case O_1 -> BigDecimal.ONE;
 
             case O_LOG_N -> {
-                if (n <= 1) {
+                if (n == 0) {
+                    yield BigDecimal.ZERO;
+                }
+                if (n == 1) {
                     yield BigDecimal.ONE;
                 }
                 // Si es potencia exacta de 2, devolver entero exacto sin error de punto flotante
@@ -141,7 +144,7 @@ public class BigOEngine {
                     double totalLog10 = n * LOG10_2;
                     double exp = Math.floor(totalLog10);
                     double mantissa = Math.pow(10, totalLog10 - exp);
-                    yield BigDecimal.valueOf(mantissa).multiply(BigDecimal.TEN.pow((int) Math.min(exp, 10000), MC));
+                    yield BigDecimal.valueOf(mantissa).setScale(4, RoundingMode.HALF_UP).scaleByPowerOfTen((int) exp);
                 }
             }
 
@@ -159,13 +162,13 @@ public class BigOEngine {
                     if (isApproxHolder != null && isApproxHolder.length > 0) {
                         isApproxHolder[0] = true;
                     }
-                    // Aproximación de Stirling: ln(n!) ~ n*ln(n) - n + 0.5*ln(2*pi*n)
+                    // Aproximación asintótica de Stirling con corrección de primer orden: ln(n!) ~ n*ln(n) - n + 0.5*ln(2*pi*n) + 1/(12n)
                     double nd = (double) n;
-                    double lnFact = nd * Math.log(nd) - nd + 0.5 * Math.log(2 * Math.PI * nd);
+                    double lnFact = nd * Math.log(nd) - nd + 0.5 * Math.log(2 * Math.PI * nd) + 1.0 / (12.0 * nd);
                     double log10Fact = lnFact / LN_10;
                     double exp = Math.floor(log10Fact);
                     double mantissa = Math.pow(10, log10Fact - exp);
-                    yield BigDecimal.valueOf(mantissa).multiply(BigDecimal.TEN.pow((int) Math.min(exp, 10000), MC));
+                    yield BigDecimal.valueOf(mantissa).setScale(4, RoundingMode.HALF_UP).scaleByPowerOfTen((int) exp);
                 }
             }
         };
@@ -190,7 +193,7 @@ public class BigOEngine {
                 return String.format(Locale.US, "~%.3f × 10%s (%,d dígitos)", mantissa, TimeFormatter.toSuperscript((int) exp), exp + 1);
             } else if (complexity == ComplexityClass.O_N_FACT) {
                 double nd = (double) n;
-                double lnFact = nd * Math.log(nd) - nd + 0.5 * Math.log(2 * Math.PI * nd);
+                double lnFact = nd * Math.log(nd) - nd + 0.5 * Math.log(2 * Math.PI * nd) + 1.0 / (12.0 * nd);
                 double log10Fact = lnFact / LN_10;
                 long exp = (long) Math.floor(log10Fact);
                 double mantissa = Math.pow(10, log10Fact - exp);

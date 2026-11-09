@@ -128,4 +128,48 @@ class TimeFormatterTest {
         assertTrue(formatted.contains("dígitos"), "Debe indicar conteo de dígitos para números astronómicos");
         assertTrue(formatted.contains("10"));
     }
+
+    @Test
+    @DisplayName("Formateo de cientos de miles y millones de años sin pérdida de precisión ni gramática incorrecta")
+    void testThousandsAndMillionsOfYears() {
+        // 150.000 años no debe formatearse jamás como '0 millones de años'
+        BigDecimal sec150k = new BigDecimal("31557600").multiply(new BigDecimal("150000"));
+        String res150k = TimeFormatter.formatSeconds(sec150k);
+        assertFalse(res150k.contains("0 millones"), "150.000 años no puede ser '0 millones'");
+        assertTrue(res150k.contains("siglos") || res150k.contains("años"));
+
+        // 500.000 años no debe ser '0 millones de años'
+        BigDecimal sec500k = new BigDecimal("31557600").multiply(new BigDecimal("500000"));
+        String res500k = TimeFormatter.formatSeconds(sec500k);
+        assertFalse(res500k.contains("0 millones"), "500.000 años no puede ser '0 millones'");
+
+        // 1.000.000 años: singular gramatical '1.00 millón'
+        BigDecimal sec1M = new BigDecimal("31557600").multiply(new BigDecimal("1000000"));
+        String res1M = TimeFormatter.formatSeconds(sec1M);
+        assertTrue(res1M.contains("1.00 millón de años"));
+
+        // 1.500.000 años: 1.50 millones de años (no truncar a 1)
+        BigDecimal sec1_5M = new BigDecimal("31557600").multiply(new BigDecimal("1500000"));
+        String res1_5M = TimeFormatter.formatSeconds(sec1_5M);
+        assertTrue(res1_5M.contains("1.50 millones de años"));
+    }
+
+    @Test
+    @DisplayName("Múltiplos pequeños de la edad cósmica evitan superíndice redundante 10⁰")
+    void testSmallCosmicMultiplesNoZeroExponent() {
+        BigDecimal universeAgeSec = new BigDecimal("435494880000000000");
+        BigDecimal cosmicSec = universeAgeSec.multiply(new BigDecimal("2.5"));
+        String result = TimeFormatter.formatSeconds(cosmicSec);
+
+        assertTrue(result.contains("2.50 × edad del Universo (13.8 Ga)"));
+        assertFalse(result.contains("10⁰"), "No debe contener 10⁰ para múltiplos directos legibles");
+    }
+
+    @Test
+    @DisplayName("toPrettyScientific procesa escalas colosales con O(1) memoria")
+    void testToPrettyScientificMassiveExponent() {
+        BigDecimal massive = new BigDecimal("8.263").scaleByPowerOfTen(5565708);
+        String pretty = TimeFormatter.toPrettyScientific(massive);
+        assertEquals("8.263 × 10⁵⁵⁶⁵⁷⁰⁸", pretty);
+    }
 }

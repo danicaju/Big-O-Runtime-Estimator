@@ -7,6 +7,7 @@ import com.danicaju.bigo.core.TimeUnit;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Locale;
 import java.util.Scanner;
 
 /**
@@ -81,9 +82,9 @@ public class BigOConsoleApp {
         long n = askInputN();
         if (n < 0) return;
 
-        System.out.println("\n" + BOLD + "Resultados para n = " + String.format("%,d", n) + " (Tiempo/op: " + timePerOp + " " + timeUnit.getSymbol() + "):" + RESET);
+        System.out.println("\n" + BOLD + "Resultados para n = " + String.format(Locale.US, "%,d", n) + " (Tiempo/op: " + timePerOp + " " + timeUnit.getSymbol() + "):" + RESET);
         printSeparator();
-        System.out.printf(BOLD + "%-12s | %-13s | %-10s | %-28s | %s%n" + RESET,
+        System.out.printf(BOLD + "%-12s | %-13s | %-10s | %-34s | %s%n" + RESET,
                 "Complejidad", "Nombre", "Eficiencia", "Operaciones f(n)", "Tiempo Estimado");
         printSeparator();
 
@@ -95,12 +96,12 @@ public class BigOConsoleApp {
                 case MALO, HORRIBLE -> RED;
             };
 
-            System.out.printf("%-12s | %-13s | " + effColor + "%-10s" + RESET + " | %-28s | %s%n",
-                    res.complexityClass().getNotation(),
-                    res.complexityClass().getName(),
-                    res.complexityClass().getEfficiency().getLabel(),
-                    res.formattedOperations(),
-                    res.formattedTime());
+            System.out.printf("%-12s | %-13s | " + effColor + "%-10s" + RESET + " | %-34s | %s%n",
+                res.complexityClass().getNotation(),
+                res.complexityClass().getName(),
+                res.complexityClass().getEfficiency().getLabel(),
+                res.formattedOperations(),
+                res.formattedTime());
         }
         printSeparator();
     }
@@ -160,11 +161,11 @@ public class BigOConsoleApp {
         }
 
         System.out.print(CYAN + "Introduce el valor de tiempo por operación (ej. 1, 0.001, 10): " + RESET);
-        String valInput = scanner.nextLine().trim().replace(',', '.');
+        String valInput = scanner.nextLine().trim().replace(',', '.').replace(" ", "");
         try {
             BigDecimal val = new BigDecimal(valInput);
-            if (val.compareTo(BigDecimal.ZERO) <= 0) {
-                System.out.println(RED + "El tiempo por operación debe ser estrictamente positivo." + RESET);
+            if (val.compareTo(BigDecimal.ZERO) < 0) {
+                System.out.println(RED + "El tiempo por operación debe ser mayor o igual a cero." + RESET);
                 return;
             }
             this.timePerOp = val;
@@ -201,7 +202,7 @@ public class BigOConsoleApp {
                 case "5" -> 100_000L;
                 case "6" -> 1_000_000L;
                 default -> {
-                    long val = Long.parseLong(input.replace(".", "").replace(",", ""));
+                    long val = Long.parseLong(input.replace(".", "").replace(",", "").replace(" ", ""));
                     if (val < 0) {
                         System.out.println(RED + "El valor n debe ser >= 0." + RESET);
                         yield -1L;
@@ -216,6 +217,6 @@ public class BigOConsoleApp {
     }
 
     private void printSeparator() {
-        System.out.println("-----------------------------------------------------------------------------------------------------------------------");
+        System.out.println("-----------------------------------------------------------------------------------------------------------------------------");
     }
 }

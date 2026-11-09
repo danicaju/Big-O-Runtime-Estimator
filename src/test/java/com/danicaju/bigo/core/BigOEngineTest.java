@@ -100,17 +100,54 @@ class BigOEngineTest {
     }
 
     @Test
-    @DisplayName("Valores colosales para O(2ⁿ) y O(n!) activan modo asintótico sin agotar memoria ni colgarse")
+    @DisplayName("Valores colosales para O(2ⁿ) y O(n!) calculan órdenes asintóticos reales sin truncamiento a 10.000 ni agotar memoria")
     void testColossalValuesSafety() {
         boolean[] isApprox = new boolean[]{false};
         BigDecimal opsExp = engine.computeOperations(ComplexityClass.O_2_N, 50_000L, isApprox);
         assertTrue(isApprox[0], "Debe activar el modo de aproximación asintótica para n > 10,000");
         assertNotNull(opsExp);
+        // 2^50,000 tiene 15,052 dígitos (exponente 15,051)
+        int exp2n = opsExp.precision() - opsExp.scale() - 1;
+        assertEquals(15051, exp2n, "El exponente no puede estar truncado a 10,000");
 
         isApprox[0] = false;
         BigDecimal opsFact = engine.computeOperations(ComplexityClass.O_N_FACT, 20_000L, isApprox);
         assertTrue(isApprox[0], "Debe activar el modo de aproximación asintótica para n > 5,000");
         assertNotNull(opsFact);
+        // 20,000! tiene 77,338 dígitos (exponente 77,337)
+        int expFact = opsFact.precision() - opsFact.scale() - 1;
+        assertEquals(77337, expFact, "El exponente factorial no puede estar truncado a 10,000");
+    }
+
+    @Test
+    @DisplayName("Gestión coherente y matemáticamente rigurosa para n = 0 en todas las clases")
+    void testNZeroHandling() {
+        assertEquals(BigDecimal.ONE, engine.computeOperations(ComplexityClass.O_1, 0, null));
+        assertEquals(BigDecimal.ZERO, engine.computeOperations(ComplexityClass.O_LOG_N, 0, null), "log(0) algorítmico sobre colección vacía es 0");
+        assertEquals(BigDecimal.ZERO, engine.computeOperations(ComplexityClass.O_N, 0, null));
+        assertEquals(BigDecimal.ZERO, engine.computeOperations(ComplexityClass.O_N_LOG_N, 0, null));
+        assertEquals(BigDecimal.ZERO, engine.computeOperations(ComplexityClass.O_N_2, 0, null));
+        assertEquals(BigDecimal.ZERO, engine.computeOperations(ComplexityClass.O_N_3, 0, null));
+        assertEquals(BigDecimal.ONE, engine.computeOperations(ComplexityClass.O_2_N, 0, null)); // 2^0 = 1
+        assertEquals(BigDecimal.ONE, engine.computeOperations(ComplexityClass.O_N_FACT, 0, null)); // 0! = 1
+    }
+
+    @Test
+    @DisplayName("Evaluación completa de presets máximos (n = 100.000 y n = 1.000.000) es instantánea y consistente")
+    void testFullCalculationPresetsLargeN() {
+        // n = 100.000 (preset 5 de la GUI)
+        List<ComplexityResult> res100k = engine.calculateAll(100_000L, new BigDecimal("0.001"), TimeUnit.MILLISECONDS);
+        assertEquals(8, res100k.size());
+        ComplexityResult fact100k = res100k.get(7);
+        assertTrue(fact100k.formattedOperations().contains("456,574 dígitos"), "100.000! debe tener 456.574 dígitos");
+        assertTrue(fact100k.formattedTime().contains("edad del Universo"), "El tiempo estimado debe reflejar eras cósmicas");
+
+        // n = 1.000.000 (preset 6 de la GUI)
+        List<ComplexityResult> res1M = engine.calculateAll(1_000_000L, new BigDecimal("1"), TimeUnit.NANOSECONDS);
+        assertEquals(8, res1M.size());
+        ComplexityResult fact1M = res1M.get(7);
+        assertTrue(fact1M.formattedOperations().contains("5,565,709 dígitos"), "1.000.000! debe tener ~5.5 millones de dígitos");
+        assertFalse(fact1M.formattedTime().contains("10⁹⁹⁹"), "El tiempo no debe sufrir artefactos de capping en 10.000");
     }
 
     @Test

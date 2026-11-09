@@ -29,6 +29,7 @@ public class BigOGuiApp extends JFrame {
     private JComboBox<TimeUnit> comboUnits;
     private JTable tableComparison;
     private DefaultTableModel tableModel;
+    private JTabbedPane tabbedPane;
 
     // Componentes de la pestaña individual
     private JComboBox<ComplexityClass> comboDetailClass;
@@ -76,7 +77,7 @@ public class BigOGuiApp extends JFrame {
         add(headerPanel, BorderLayout.NORTH);
 
         // 2. Center Content with TabbedPane
-        JTabbedPane tabbedPane = new JTabbedPane();
+        tabbedPane = new JTabbedPane();
         tabbedPane.setBorder(new EmptyBorder(10, 15, 10, 15));
         tabbedPane.setFont(new Font("Segoe UI", Font.BOLD, 13));
 
@@ -202,6 +203,27 @@ public class BigOGuiApp extends JFrame {
         tableComparison.getTableHeader().setFont(new Font("Segoe UI", Font.BOLD, 13));
         tableComparison.getTableHeader().setReorderingAllowed(false);
         tableComparison.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tableComparison.setToolTipText("Haz clic para sincronizar la inspección o doble clic para ver el detalle completo.");
+
+        // Sincronización interactiva al seleccionar fila
+        tableComparison.getSelectionModel().addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                int row = tableComparison.getSelectedRow();
+                if (row >= 0 && row < ComplexityClass.values().length && comboDetailClass != null) {
+                    comboDetailClass.setSelectedIndex(row);
+                }
+            }
+        });
+
+        // Doble clic navega automáticamente a la pestaña de análisis detallado
+        tableComparison.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2 && tableComparison.getSelectedRow() >= 0 && tabbedPane != null) {
+                    tabbedPane.setSelectedIndex(1);
+                }
+            }
+        });
 
         // Renderers de celdas
         // Columna Complejidad: Negrita
@@ -220,7 +242,7 @@ public class BigOGuiApp extends JFrame {
         tableComparison.getColumnModel().getColumn(2).setPreferredWidth(130);
 
         // Columna Eficiencia: Pill Badge coloreado
-        tableComparison.getColumnModel().getColumn(3).setPreferredWidth(120);
+        tableComparison.getColumnModel().getColumn(3).setPreferredWidth(130);
         tableComparison.getColumnModel().getColumn(3).setCellRenderer(new EfficiencyBadgeRenderer());
 
         // Columna Operaciones: Monospace alineado a la derecha
@@ -473,26 +495,34 @@ public class BigOGuiApp extends JFrame {
         TimeUnit unit = (TimeUnit) comboUnits.getSelectedItem();
 
         try {
-            String nStr = fieldN.getText().trim().replace(".", "").replace(",", "");
+            String nStr = fieldN.getText().trim().replace(".", "").replace(",", "").replace(" ", "");
+            if (nStr.isEmpty()) {
+                showError("El tamaño de entrada n no puede estar vacío.");
+                return;
+            }
             n = Long.parseLong(nStr);
             if (n < 0) {
                 showError("El tamaño n debe ser mayor o igual a 0.");
                 return;
             }
         } catch (NumberFormatException ex) {
-            showError("Introduce un número entero válido para n.");
+            showError("Introduce un número entero válido para n (formato: dígitos positivos sin decimales).");
             return;
         }
 
         try {
-            String timeStr = fieldTimePerOp.getText().trim().replace(',', '.');
+            String timeStr = fieldTimePerOp.getText().trim().replace(',', '.').replace(" ", "");
+            if (timeStr.isEmpty()) {
+                showError("El tiempo por operación no puede estar vacío.");
+                return;
+            }
             timePerOp = new BigDecimal(timeStr);
             if (timePerOp.compareTo(BigDecimal.ZERO) < 0) {
                 showError("El tiempo por operación no puede ser negativo.");
                 return;
             }
         } catch (Exception ex) {
-            showError("Introduce un número válido para el tiempo por operación.");
+            showError("Introduce un número decimal válido para el tiempo por operación.");
             return;
         }
 
@@ -534,9 +564,9 @@ public class BigOGuiApp extends JFrame {
         textDetailExamples.setText(selected.getRealWorldExamples());
 
         try {
-            String nStr = fieldN.getText().trim().replace(".", "").replace(",", "");
+            String nStr = fieldN.getText().trim().replace(".", "").replace(",", "").replace(" ", "");
             long n = Long.parseLong(nStr);
-            String timeStr = fieldTimePerOp.getText().trim().replace(',', '.');
+            String timeStr = fieldTimePerOp.getText().trim().replace(',', '.').replace(" ", "");
             BigDecimal timePerOp = new BigDecimal(timeStr);
             TimeUnit unit = (TimeUnit) comboUnits.getSelectedItem();
 
@@ -576,19 +606,49 @@ public class BigOGuiApp extends JFrame {
     }
 
     /**
-     * Renderer visual para renderizar badges de píldora coloreados para la eficiencia.
+     * Renderer visual para badges con aspecto de píldora redondeada moderna.
      */
     private static class EfficiencyBadgeRenderer extends DefaultTableCellRenderer {
+        private EfficiencyLevel currentEff;
+        private boolean isRowSelected;
+
+        public EfficiencyBadgeRenderer() {
+            setHorizontalAlignment(SwingConstants.CENTER);
+            setOpaque(false);
+        }
+
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+            this.isRowSelected = isSelected;
             if (value instanceof EfficiencyLevel eff) {
-                label.setText(eff.getLabel());
-                label.setForeground(eff.getColor());
-                label.setFont(new Font("Segoe UI", Font.BOLD, 12));
-                label.setHorizontalAlignment(SwingConstants.CENTER);
+                this.currentEff = eff;
+                setText(eff.getLabel());
+                setForeground(eff.getColor());
+                setFont(new Font("Segoe UI", Font.BOLD, 12));
+            } else {
+                this.currentEff = null;
             }
-            return label;
+            return this;
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            if (currentEff != null) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                Color c = currentEff.getColor();
+                int w = getWidth() - 16;
+                int h = getHeight() - 10;
+                int x = 8;
+                int y = 5;
+                g2.setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), isRowSelected ? 70 : 38));
+                g2.fillRoundRect(x, y, w, h, 14, 14);
+                g2.setColor(new Color(c.getRed(), c.getGreen(), c.getBlue(), isRowSelected ? 200 : 120));
+                g2.drawRoundRect(x, y, w, h, 14, 14);
+                g2.dispose();
+            }
+            super.paintComponent(g);
         }
     }
 }

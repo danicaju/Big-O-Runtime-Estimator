@@ -103,9 +103,9 @@ public final class TimeFormatter {
             return String.format(Locale.US, "%.2f años", years);
         }
 
-        // Siglos: < 100.000 años
+        // Siglos: < 1.000.000 años
         BigDecimal years = seconds.divide(SECONDS_PER_YEAR, MC);
-        if (years.compareTo(new BigDecimal("100000")) < 0) {
+        if (years.compareTo(new BigDecimal("1000000")) < 0) {
             double centuries = years.divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP).doubleValue();
             return String.format(Locale.US, "%.2f siglos (~%,d años)", centuries, years.longValue());
         }
@@ -113,7 +113,10 @@ public final class TimeFormatter {
         // Millones de años hasta la edad del Universo (~13.8 Ga)
         if (seconds.compareTo(SECONDS_AGE_OF_UNIVERSE) < 0) {
             BigDecimal millions = years.divide(new BigDecimal("1000000"), 2, RoundingMode.HALF_UP);
-            return String.format(Locale.US, "%s millones de años", formatWithThousands(millions.toBigInteger()));
+            if (millions.compareTo(new BigDecimal("1.00")) == 0) {
+                return "1.00 millón de años";
+            }
+            return String.format(Locale.US, "%,.2f millones de años", millions.doubleValue());
         }
 
         // Escalas cósmicas (> 13.8 mil millones de años = Edad del Universo)
@@ -123,7 +126,12 @@ public final class TimeFormatter {
 
     private static String formatCosmicEra(BigDecimal years, BigDecimal universeAges) {
         String formattedYears = toPrettyScientific(years) + " años";
-        String formattedEras = toPrettyScientific(universeAges) + " × edad del Universo (13.8 Ga)";
+        String formattedEras;
+        if (universeAges.compareTo(new BigDecimal("10000")) < 0) {
+            formattedEras = String.format(Locale.US, "%,.2f × edad del Universo (13.8 Ga)", universeAges.doubleValue());
+        } else {
+            formattedEras = toPrettyScientific(universeAges) + " × edad del Universo (13.8 Ga)";
+        }
         return formattedYears + " (~" + formattedEras + ")";
     }
 
@@ -131,20 +139,20 @@ public final class TimeFormatter {
      * Formatea un número de operaciones enteras en formato legible con separadores o notación científica unicode.
      */
     public static String formatOperations(BigInteger ops) {
-        if (ops == null) {
-            return "0";
-        }
-        if (ops.compareTo(BigInteger.ZERO) == 0) {
+        if (ops == null || ops.signum() == 0) {
             return "0";
         }
 
-        // Hasta 1 billón (10^12) o 16 dígitos, mostramos con separadores de miles
-        if (ops.toString().length() <= 12) {
+        String s = ops.toString();
+        int len = s.length();
+
+        // Hasta 1 billón (10^12), mostramos con separadores de miles
+        if (len <= 12) {
             return formatWithThousands(ops);
         }
 
         // Para números astronómicos, combinamos notación científica Unicode elegante y conteo de dígitos
-        return toPrettyScientific(new BigDecimal(ops)) + " (" + ops.toString().length() + " dígitos)";
+        return toPrettyScientific(new BigDecimal(ops)) + " (" + String.format(Locale.US, "%,d", len) + " dígitos)";
     }
 
     /**
@@ -158,33 +166,23 @@ public final class TimeFormatter {
     }
 
     /**
-     * Convierte un BigDecimal a notación científica con superíndices Unicode (ej. 1.25 × 10¹⁴).
+     * Convierte un BigDecimal a notación científica con superíndices Unicode (ej. 1.250 × 10¹⁴).
+     * Diseñado con complejidad O(1) que extrae mantisa y exponente directamente sin
+     * conversiones masivas a String ni riesgo de desbordamiento de memoria.
      */
     public static String toPrettyScientific(BigDecimal val) {
-        if (val == null || val.compareTo(BigDecimal.ZERO) == 0) {
+        if (val == null || val.signum() == 0) {
             return "0";
         }
-        // Usar formato científico estándar y transformar
-        String eng = String.format(Locale.US, "%.3e", val.doubleValue());
-        if (val.compareTo(new BigDecimal(Double.MAX_VALUE)) > 0) {
-            // Manejar valores que exceden Double.MAX_VALUE
-            BigInteger bi = val.toBigInteger();
-            String s = bi.toString();
-            int exp = s.length() - 1;
-            String mantissa = s.charAt(0) + "." + (s.length() > 1 ? s.substring(1, Math.min(4, s.length())) : "000");
-            return mantissa + " × 10" + toSuperscript(exp);
-        }
 
-        int eIndex = eng.indexOf('e');
-        if (eIndex == -1) {
-            eIndex = eng.indexOf('E');
+        BigDecimal normalized = val.abs().stripTrailingZeros();
+        int exp = normalized.precision() - normalized.scale() - 1;
+        BigDecimal mantissa = normalized.scaleByPowerOfTen(-exp).setScale(3, RoundingMode.HALF_UP);
+        if (mantissa.compareTo(BigDecimal.TEN) >= 0) {
+            mantissa = mantissa.divide(BigDecimal.TEN, 3, RoundingMode.HALF_UP);
+            exp++;
         }
-        if (eIndex != -1) {
-            String mantissa = eng.substring(0, eIndex);
-            int exp = Integer.parseInt(eng.substring(eIndex + 1));
-            return mantissa + " × 10" + toSuperscript(exp);
-        }
-        return eng;
+        return String.format(Locale.US, "%.3f × 10%s", mantissa.doubleValue(), toSuperscript(exp));
     }
 
     /**
