@@ -15,6 +15,10 @@
 
 A scientific algorithmic runtime estimation platform engineered in **Java 17+**. Computes execution runtimes across 8 canonical Big-O complexity families using arbitrary-precision arithmetic (`BigInteger`, `BigDecimal`), asymptotic Ramanujan/Stirling approximations, and multi-scale cosmological time formatting. Features a modern **FlatLaf Dark** comparative GUI and an interactive terminal CLI.
 
+<p align="center">
+  <img src="assets/bigo-ui-preview.svg" alt="Big-O Runtime Estimator FlatLaf Dark Interface" width="100%" />
+</p>
+
 ---
 
 ## Supported Complexity Taxonomy

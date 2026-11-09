@@ -18,6 +18,10 @@ Simulador de complejidad algorítmica y calculadora de tiempo de ejecución teó
 
 Incorpora un motor matemático de precisión arbitraria basado en **BigInteger** y **BigDecimal** inmune a desbordamientos de 64 bits en funciones exponenciales ($2^n$) y factoriales ($n!$), un formateador temporal capaz de traducir duraciones desde nanosegundos hasta eras cosmológicas ($> 13.8\ \text{Ga}$), y un **doble frontend**: una interfaz gráfica moderna en **Swing** con tema **FlatLaf Dark** y un cliente de terminal interactivo (**CLI**).
 
+<p align="center">
+  <img src="assets/bigo-ui-preview.svg" alt="Simulador Big-O Runtime Estimator FlatLaf Dark" width="100%" />
+</p>
+
 ---
 
 ## Arquitectura del Sistema
