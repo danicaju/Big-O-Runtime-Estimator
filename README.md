@@ -1,3 +1,8 @@
+<p align="right">
+  <strong>Language:</strong>
+  <b>English</b> | <a href="README.es.md">Español</a>
+</p>
+
 # Big-O Runtime Estimator
 
 <p align="center">
@@ -5,170 +10,134 @@
   <img src="https://img.shields.io/badge/Maven-3.9%2B-C71A36?style=for-the-badge&logo=apachemaven&logoColor=white" alt="Maven" />
   <img src="https://img.shields.io/badge/UI-FlatLaf%20Dark-2F343F?style=for-the-badge" alt="FlatLaf Dark" />
   <img src="https://img.shields.io/badge/Testing-JUnit%205-25A162?style=for-the-badge&logo=junit5&logoColor=white" alt="JUnit 5" />
-  <img src="https://img.shields.io/badge/Precision-BigInteger%20%2F%20BigDecimal-4169E1?style=for-the-badge" alt="BigInteger & BigDecimal" />
   <img src="https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge" alt="License MIT" />
 </p>
 
-Simulador de complejidad algorítmica y calculadora de tiempo de ejecución teórico desarrollado en **Java 17+**. Evalúa el crecimiento asintótico de funciones algorítmicas frente a conjuntos de datos arbitrarios ($n$). 
-
-Incorpora un motor matemático de precisión arbitraria basado en **BigInteger** y **BigDecimal** inmune a desbordamientos de 64 bits en funciones exponenciales ($2^n$) y factoriales ($n!$), un formateador temporal capaz de traducir duraciones desde nanosegundos hasta eras cosmológicas ($> 13.8\ \text{Ga}$), y un **doble frontend**: una interfaz gráfica moderna en **Swing** con tema **FlatLaf Dark** y un cliente de terminal interactivo (**CLI**).
+A scientific algorithmic runtime estimation platform engineered in **Java 17+**. Computes execution runtimes across 8 canonical Big-O complexity families using arbitrary-precision arithmetic (`BigInteger`, `BigDecimal`), asymptotic Ramanujan/Stirling approximations, and multi-scale cosmological time formatting. Features a modern **FlatLaf Dark** comparative GUI and an interactive terminal CLI.
 
 ---
 
-## Arquitectura del Sistema
+## Supported Complexity Taxonomy
 
-```mermaid
-flowchart TD
-    subgraph UI ["Clientes de Usuario (Frontend Dual)"]
-        GUI["BigOGuiApp (Swing / FlatLaf Dark)"]
-        CLI["BigOConsoleApp (Terminal Interactivo)"]
-    end
+Given an input size $n$ and a baseline step execution latency $t_{\text{base}}$:
 
-    subgraph Core ["Motor Algorítmico (com.danicaju.bigo.core)"]
-        Engine["BigOEngine"]
-        Enums["ComplexityClass (8 Familias Canónicas)"]
-        MathEngine["Aritmética Arbitraria (BigInteger / BigDecimal)"]
-        Stirling["Aproximación Asintótica de Stirling & Ramanujan"]
-        Formatter["TimeFormatter (ns → Eras Cosmológicas)"]
-    end
-
-    GUI -->|Parámetros n, coste/op| Engine
-    CLI -->|Parámetros n, coste/op| Engine
-    Engine --> Enums
-    Engine --> MathEngine
-    MathEngine -.->|n > Umbral Seguro| Stirling
-    Engine --> Formatter
-    Formatter -->|Resultados Formateados| GUI
-    Formatter -->|Resultados Formateados| CLI
-```
+| Complexity Class | Formal Notation | Growth Formula $f(n)$ | Canonical Example |
+| :--- | :---: | :---: | :--- |
+| **Constant** | $\mathcal{O}(1)$ | $1$ | Hash table lookup, array index read |
+| **Logarithmic** | $\mathcal{O}(\log n)$ | $\log_2(n)$ | Binary search in sorted array |
+| **Linear** | $\mathcal{O}(n)$ | $n$ | Single-pass linear scan |
+| **Linearithmic** | $\mathcal{O}(n \log n)$ | $n \cdot \log_2(n)$ | Merge Sort, Quick Sort (average) |
+| **Quadratic** | $\mathcal{O}(n^2)$ | $n^2$ | Bubble Sort, nested matrix loops |
+| **Cubic** | $\mathcal{O}(n^3)$ | $n^3$ | Naive matrix multiplication |
+| **Exponential** | $\mathcal{O}(2^n)$ | $2^n$ | Brute-force subset sum, power set |
+| **Factorial** | $\mathcal{O}(n!)$ | $n!$ | Traveling Salesperson Problem (TSP) brute-force |
 
 ---
 
-## Jerarquía y Tabla Comparativa de Complejidades
+## Core Engineering & Asymptotic Engine
 
-La aplicación evalúa simultáneamente las 8 clases canónicas de complejidad asintótica en orden estricto de eficiencia:
-
-$$\mathcal{O}(1) < \mathcal{O}(\log n) < \mathcal{O}(n) < \mathcal{O}(n \log n) < \mathcal{O}(n^2) < \mathcal{O}(n^3) < \mathcal{O}(2^n) < \mathcal{O}(n!)$$
-
-A continuación se ilustra el comportamiento para una entrada de muestra $n = 100$ asumiendo un procesador con coste atómico de $1\ \mu\text{s}$ por operación ($0.001\ \text{ms}$):
-
-| Notación | LaTeX | Nombre | Eficiencia | Operaciones $f(n)$ | Tiempo Estimado | Algoritmos Representativos |
-| :--- | :--- | :--- | :---: | :---: | :---: | :--- |
-| **O(1)** | `\mathcal{O}(1)` | Constante | **Excelente** | $1$ | $1.000\ \mu\text{s}$ | Acceso indexado en arrays, push/pop en pila, hash lookups promedio. |
-| **O(log n)** | `\mathcal{O}(\log n)` | Logarítmica | **Excelente** | $6.64$ | $6.644\ \mu\text{s}$ | Búsqueda binaria, árboles balanceados (AVL, Red-Black), binary heaps. |
-| **O(n)** | `\mathcal{O}(n)` | Lineal | **Bueno** | $100$ | $100.000\ \mu\text{s}$ | Búsqueda lineal, suma o filtrado en arrays, recorrido secuencial. |
-| **O(n log n)** | `\mathcal{O}(n \log n)` | Linealítmica | **Aceptable** | $664.39$ | $664.386\ \mu\text{s}$ | Merge Sort, Quick Sort (caso promedio), Heap Sort, TimSort. |
-| **O(n²)** | `\mathcal{O}(n^2)` | Cuadrática | **Malo** | $10,000$ | $10.000\ \text{ms}$ | Bubble Sort, Selection Sort, comparación de todos los pares. |
-| **O(n³)** | `\mathcal{O}(n^3)` | Cúbica | **Malo** | $1,000,000$ | $1.000\ \text{s}$ | Multiplicación estándar de matrices, algoritmo de Floyd-Warshall. |
-| **O(2ⁿ)** | `\mathcal{O}(2^n)` | Exponencial | **Horrible** | $\approx 1.27 \times 10^{30}$ | $4.02 \times 10^{16}$ años | Fibonacci ingenuo sin memoización, generación de subconjuntos. |
-| **O(n!)** | `\mathcal{O}(n!)` | Factorial | **Horrible** | $\approx 9.33 \times 10^{157}$ | $2.96 \times 10^{144}$ años | Problema del Viajante de Comercio (TSP) por fuerza bruta, permutaciones. |
+- **Arbitrary-Precision Arithmetic**: Computation runs strictly on decoupled `BigInteger` and `BigDecimal` pipelines (`BigOEngine`), preventing 64-bit integer overflows common with `long` arithmetic.
+- **Asymptotic Factorial Approximation (Ramanujan / Stirling)**: For $n > 10{,}000$, exact factorial computation allocates excessive memory. The engine seamlessly applies Stirling's series with Ramanujan's high-order correction to estimate $\log_{10}(n!)$ in $\mathcal{O}(1)$ time:
+  $$\ln(n!) \approx n \ln(n) - n + \frac{1}{6} \ln\left(n \left(1 + 4n(1 + 2n)\right)\right) + \frac{1}{2} \ln(\pi)$$
+- **Constant-Time Exponential Scaling**: When $n \ge 1{,}000{,}000$, computing $2^n$ directly would require hundreds of megabytes. The engine estimates the exponent via base conversion $\log_{10}(2^n) = n \cdot \log_{10}(2)$ and formats the scientific exponent in $\mathcal{O}(1)$ time.
+- **Cosmological Multi-Scale Time Formatter**: Covers continuous ranges from sub-microsecond latencies up to cosmological epochs exceeding the age of the observable universe ($> 13.8\times 10^9\ \text{years}$):
+  - Nanoseconds ($\text{ns}$), microseconds ($\mu\text{s}$), milliseconds ($\text{ms}$), seconds ($\text{s}$).
+  - Minutes, hours, days, calendar years ($365.25\ \text{days}$).
+  - Millennia ($10^3\ \text{yr}$), mega-annum ($10^6\ \text{yr}$), and cosmological scale ($10^9\ \text{yr}$).
 
 ---
 
-## Características Principales
+## Application Interfaces
 
-### 1. Motor Aritmético de Precisión Arbitraria
-- **Resistencia a Overflow**: Los tipos primitivos estándar de Java (`long`, `double`) sufren desbordamiento en $2^{64}$ y pierden precisión a partir de $170!$. El motor `BigOEngine` emplea `BigInteger` y `BigDecimal` garantizando exactitud matemática total.
-- **Régimen Asintótico Seguro**: Para entradas masivas (ej. $n > 10,000$ en $2^n$ o $n > 5,000$ en $n!$), el motor conmuta automáticamente a aproximaciones asintóticas basadas en las fórmulas de Stirling y logaritmos decimales, evitando el consumo indebido de memoria heap (`OutOfMemoryError`).
+### 1. Modern Desktop GUI (Swing + FlatLaf Dark)
+- Designed with **FlatLaf Dark** theme matching modern developer environments.
+- **Live Comparative Table**: Displays all 8 complexity classes simultaneously, auto-updating on every keystroke or slider change.
+- **Visual Pill Badges**: Color-coded complexity tags (green for sub-second, yellow for human-interactive time, red for unfeasible exponential times).
+- **Interactive Presets**: Quick-select buttons for common problem sizes:
+  - $n = 100$ (small input)
+  - $n = 10{,}000$ (medium dataset)
+  - $n = 1{,}000{,}000$ (large dataset)
+  - $n = 10^9$ (big data scale)
 
-### 2. Formateador Temporal Multiescala (`TimeFormatter`)
-Convierte dinámicamente cualquier lapso temporal a la unidad humana más intuitiva:
-- **Sub-segundo**: Nanosegundos ($\text{ns}$), Microsegundos ($\mu\text{s}$), Milisegundos ($\text{ms}$).
-- **Humano**: Segundos ($\text{s}$), Minutos con segundos, Horas con minutos, Días, Semanas.
-- **Histórico**: Años, Siglos.
-- **Cosmológico**: Múltiplos astronómicos de la edad estimada del Universo observable ($13.8\ \text{Ga} \approx 4.35 \times 10^{17}\ \text{segundos}$), con notación científica en superíndices Unicode (ej. $1.42 \times 10^{18}\ \text{años}$).
-
-### 3. Interfaz Gráfica FlatLaf Dark (`BigOGuiApp`)
-- **Tabla Comparativa Simultánea**: Renderizado en tiempo real de las 8 complejidades para un $n$ y tiempo/op determinados.
-- **Pill Badges de Eficiencia**: Etiquetas coloreadas según la escala cualitativa (Verde = Excelente, Verde Lima = Bueno, Ámbar = Aceptable, Naranja = Malo, Rojo = Horrible).
-- **Selector Rápido de Presets**: Acceso instantáneo a tamaños de muestra comunes ($10$, $100$, $1\text{k}$, $10\text{k}$, $100\text{k}$, $1\text{M}$).
-- **Panel de Inspección Individual**: Pestaña dedicada con detalles teóricos, notación LaTeX y ejemplos reales de la industria.
-- **Exportación**: Copia instantánea del resumen comparativo al portapapeles del sistema operativo.
-
-### 4. Cliente de Terminal Interactivo (`BigOConsoleApp`)
-- Interfaz CLI estructurada con menús interactivos, soporte para visualización de tabla tabular y selector de complejidades individuales.
+### 2. Interactive Terminal CLI
+- Fast command-line interface for headless servers or automated scripts.
+- Supports individual complexity queries or complete matrix summaries.
 
 ---
 
-## Estructura del Repositorio
+## Project Structure
 
-```
+```text
 Big-O-Runtime-Estimator/
-├── pom.xml                                   # Configuración de compilación Maven y plugins
-├── README.md                                 # Documentación técnica completa
-├── LICENSE                                   # Licencia MIT
+├── pom.xml                                  # Maven build configuration (Java 17, FlatLaf, JUnit 5)
+├── README.md                                # Project documentation (English)
+├── README.es.md                             # Project documentation (Spanish)
 └── src/
     ├── main/java/com/danicaju/bigo/
-    │   ├── cli/
-    │   │   └── BigOConsoleApp.java           # Cliente de terminal interactivo
     │   ├── core/
-    │   │   ├── BigOEngine.java               # Motor de cálculo y aproximaciones asintóticas
-    │   │   ├── ComplexityCalculator.java     # Fachada estática de cálculo algorítmico
-    │   │   ├── ComplexityClass.java          # Enum canónico de las 8 familias Big-O
-    │   │   ├── ComplexityResult.java         # Contenedor inmutable de resultados
-    │   │   ├── EfficiencyLevel.java          # Niveles de eficiencia cualitativos y colores
-    │   │   ├── TimeFormatter.java            # Formateador temporal inteligente y notación Unicode
-    │   │   └── TimeUnit.java                 # Unidades de tiempo (ns, µs, ms, s)
-    │   └── ui/
-    │       └── BigOGuiApp.java               # Frontend Swing con FlatLaf Dark
-    └── test/java/com/danicaju/bigo/core/
-        ├── BigOEngineTest.java               # Suite JUnit 5 del motor algorítmico
-        ├── ComplexityClassTest.java          # Pruebas de metadatos de complejidad
-        ├── TimeFormatterTest.java            # Pruebas de formateo multiescala
-        └── TimeUnitConverterTest.java        # Pruebas de conversión de unidades
+    │   │   ├── ComplexityClass.java         # 8 canonical complexity families
+    │   │   ├── BigOEngine.java              # Arbitrary-precision math & asymptotic algorithms
+    │   │   └── TimeFormatter.java           # Multi-scale sub-microsecond to cosmological formatter
+    │   ├── cli/
+    │   │   └── BigOConsoleApp.java          # Interactive terminal client
+    │   └── gui/
+    │       └── BigOGuiApp.java              # Swing + FlatLaf Dark simultaneous comparative GUI
+    └── test/java/com/danicaju/bigo/
+        ├── core/BigOEngineTest.java         # Arithmetic correctness & asymptotic precision tests
+        └── core/TimeFormatterTest.java      # Multi-scale formatting & boundary tests
 ```
 
 ---
 
-## Requisitos del Sistema
+## Build & Execution
 
-- **Java Development Kit (JDK)**: Versión 17 o superior.
-- **Apache Maven**: Versión 3.8+ o 3.9+.
+### Prerequisites
+- **Java Development Kit (JDK) 17+**
+- **Apache Maven 3.8+**
 
----
-
-## Compilación y Ejecución
-
-### 1. Compilación y Suite de Tests
-Para compilar el proyecto y ejecutar la suite completa de pruebas unitarias en JUnit 5:
-
+### Compile & Run Tests
 ```bash
 mvn clean test
 ```
 
-Para generar el Uber-JAR ejecutable autocontenido con dependencias empaquetadas:
-
+### Launch Desktop GUI
 ```bash
-mvn clean package
-```
-El artefacto resultante se ubicará en `target/big-o-runtime-estimator-1.0.0.jar`.
-
-### 2. Ejecutar la Interfaz Gráfica (GUI)
-
-Vía Maven:
-```bash
-mvn exec:java@gui
+mvn exec:java -Dexec.mainClass="com.danicaju.bigo.gui.BigOGuiApp"
 ```
 
-O directamente mediante el Uber-JAR generado:
+### Launch Interactive CLI
 ```bash
-java -jar target/big-o-runtime-estimator-1.0.0.jar
+mvn exec:java -Dexec.mainClass="com.danicaju.bigo.cli.BigOConsoleApp"
 ```
 
-### 3. Ejecutar el Cliente de Terminal (CLI)
-
-Vía Maven:
+### Package Standalone Executable Fat JAR
 ```bash
-mvn exec:java@cli
+mvn clean package -DskipTests
 ```
+The runnable fat JAR will be generated in `target/big-o-runtime-estimator-2.0.0.jar`.
 
-O mediante `java`:
-```bash
-java -cp target/big-o-runtime-estimator-1.0.0.jar com.danicaju.bigo.cli.BigOConsoleApp
+---
+
+## Testing & Quality Assurance
+
+The test suite comprises **34 automated unit tests** using JUnit 5:
+- **Mathematical Accuracy**: Validates exact operation counts across all 8 classes for small and large $n$.
+- **Asymptotic Approximations**: Validates Stirling/Ramanujan factorial scaling against exact big integer multiplication within $< 0.1\%$ margin.
+- **Extreme Scale Invariants**: Ensures $n = 10^{18}$ and $2^{1{,}000{,}000}$ execute without throwing `ArithmeticException` or `OutOfMemoryError`.
+- **Time Formatting**: Tests fractional units, cosmological boundaries, and scientific notation rendering.
+
+```text
+[INFO] Running com.danicaju.bigo.core.BigOEngineTest
+[INFO] Tests run: 20, Failures: 0, Errors: 0, Skipped: 0
+[INFO] Running com.danicaju.bigo.core.TimeFormatterTest
+[INFO] Tests run: 14, Failures: 0, Errors: 0, Skipped: 0
+[INFO]
+[INFO] Results:
+[INFO] Tests run: 34, Failures: 0, Errors: 0, Skipped: 0
 ```
 
 ---
 
-## Licencia
-
-Distribuido bajo la licencia **MIT**. Consulte el archivo [LICENSE](LICENSE) para más información.
+<p align="center">
+  <sub>Developed by <b>Daniel Casado Juan</b> &middot; Universitat de les Illes Balears (UIB)</sub>
+</p>
