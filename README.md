@@ -30,7 +30,7 @@ Given an input size $n$ and a baseline step execution latency $t_{\text{base}}$:
 | **Constant** | $\mathcal{O}(1)$ | $1$ | Hash table lookup, array index read |
 | **Logarithmic** | $\mathcal{O}(\log n)$ | $\log_2(n)$ | Binary search in sorted array |
 | **Linear** | $\mathcal{O}(n)$ | $n$ | Single-pass linear scan |
-| **Linearithmic** | $\mathcal{O}(n \log n)$ | $n \cdot \log_2(n)$ | Merge Sort, Quick Sort (average) |
+| **Linearithmic** | $\mathcal{O}(n \log n)$ | $n \times \log_2(n)$ | Merge Sort, Quick Sort (average) |
 | **Quadratic** | $\mathcal{O}(n^2)$ | $n^2$ | Bubble Sort, nested matrix loops |
 | **Cubic** | $\mathcal{O}(n^3)$ | $n^3$ | Naive matrix multiplication |
 | **Exponential** | $\mathcal{O}(2^n)$ | $2^n$ | Brute-force subset sum, power set |
@@ -143,5 +143,5 @@ The test suite comprises **34 automated unit tests** using JUnit 5:
 ---
 
 <p align="center">
-  <sub>Developed by <b>Daniel Casado Juan</b> &middot; Universitat de les Illes Balears (UIB)</sub>
+  <sub>Developed by <b>Daniel Casado Juan</b> | Universitat de les Illes Balears (UIB)</sub>
 </p>

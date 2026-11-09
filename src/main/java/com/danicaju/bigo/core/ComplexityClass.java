@@ -40,7 +40,7 @@ public enum ComplexityClass {
             "O(n log n)",
             "\\mathcal{O}(n \\log n)",
             "Linealítmica",
-            "f(n) = n \\cdot \\log_2(n)",
+            "f(n) = n * log2(n)",
             EfficiencyLevel.ACEPTABLE,
             "Complejidad cuasi-lineal típica de algoritmos divide y vencerás óptimos para ordenación por comparación.",
             "Merge Sort, Quick Sort (caso promedio), Heap Sort, TimSort (ordenación estándar en Java y Python)."
